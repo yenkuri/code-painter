@@ -1,0 +1,192 @@
+{
+  "schemaVersion": "0.1.0",
+  "metadata": {
+    "id": "home-lab-example",
+    "title": "Home Lab Example",
+    "description": "Sample schema-first architecture map for code-painter.",
+    "tags": ["home-lab", "example"],
+    "notes": "Logical data is separated from layout coordinates so renderers can support multiple views later."
+  },
+  "nodes": [
+    {
+      "id": "adventurers-guild",
+      "kind": "router",
+      "hostname": "adventurers-guild",
+      "displayName": "Adventurers Guild",
+      "role": "Router and internet gateway",
+      "ip": "192.168.1.1",
+      "services": ["routing", "dhcp", "firewall"],
+      "tags": ["network", "gateway"],
+      "criticality": "critical",
+      "notes": "Primary network edge device."
+    },
+    {
+      "id": "darkness",
+      "kind": "dns_blocker",
+      "hostname": "darkness",
+      "displayName": "Darkness",
+      "role": "DNS blocker",
+      "ip": "192.168.1.2",
+      "services": ["dns", "ad-blocking"],
+      "tags": ["network", "dns"],
+      "criticality": "high"
+    },
+    {
+      "id": "reverse-proxy",
+      "kind": "reverse_proxy",
+      "hostname": "reverse-proxy",
+      "displayName": "Reverse Proxy",
+      "role": "Optional ingress proxy",
+      "ip": "192.168.1.10",
+      "services": ["https", "reverse_proxy"],
+      "tags": ["optional", "external-access"],
+      "criticality": "medium",
+      "notes": "Optional node for future external access views."
+    },
+    {
+      "id": "axel",
+      "kind": "switch",
+      "hostname": "axel",
+      "displayName": "Axel",
+      "role": "10G switch",
+      "ip": "192.168.1.3",
+      "services": ["switching"],
+      "tags": ["network", "10g"],
+      "criticality": "high"
+    },
+    {
+      "id": "yunyun",
+      "kind": "server",
+      "hostname": "yunyun",
+      "displayName": "Yunyun",
+      "role": "Media services host",
+      "ip": "192.168.1.20",
+      "services": ["docker", "media-services"],
+      "tags": ["server", "media"],
+      "criticality": "medium"
+    },
+    {
+      "id": "megumin",
+      "kind": "server",
+      "hostname": "megumin",
+      "displayName": "Megumin",
+      "role": "Plex server",
+      "ip": "192.168.1.21",
+      "services": ["plex"],
+      "tags": ["server", "media", "plex"],
+      "criticality": "medium"
+    },
+    {
+      "id": "aqua",
+      "kind": "storage",
+      "hostname": "aqua",
+      "displayName": "Aqua",
+      "role": "TrueNAS storage",
+      "ip": "192.168.1.30",
+      "services": ["truenas", "smb", "nfs"],
+      "tags": ["storage", "nas"],
+      "criticality": "high"
+    }
+  ],
+  "edges": [
+    {
+      "id": "wan-to-router",
+      "kind": "WAN",
+      "from": "adventurers-guild",
+      "to": "adventurers-guild",
+      "label": "WAN uplink",
+      "notes": "Self-reference marks the router as the internet edge until external nodes are modeled."
+    },
+    {
+      "id": "router-to-switch",
+      "kind": "LAN",
+      "from": "adventurers-guild",
+      "to": "axel",
+      "label": "LAN trunk"
+    },
+    {
+      "id": "router-to-dns",
+      "kind": "DNS",
+      "from": "adventurers-guild",
+      "to": "darkness",
+      "label": "DNS forwarding"
+    },
+    {
+      "id": "switch-to-yunyun",
+      "kind": "LAN",
+      "from": "axel",
+      "to": "yunyun"
+    },
+    {
+      "id": "switch-to-megumin",
+      "kind": "LAN",
+      "from": "axel",
+      "to": "megumin"
+    },
+    {
+      "id": "switch-to-aqua",
+      "kind": "LAN",
+      "from": "axel",
+      "to": "aqua"
+    },
+    {
+      "id": "proxy-to-plex",
+      "kind": "reverse_proxy",
+      "from": "reverse-proxy",
+      "to": "megumin",
+      "label": "Plex ingress"
+    },
+    {
+      "id": "plex-to-storage",
+      "kind": "SMB",
+      "from": "megumin",
+      "to": "aqua",
+      "label": "Media library"
+    },
+    {
+      "id": "yunyun-to-storage",
+      "kind": "SMB",
+      "from": "yunyun",
+      "to": "aqua",
+      "label": "Shared media"
+    },
+    {
+      "id": "yunyun-to-plex",
+      "kind": "dependency",
+      "from": "yunyun",
+      "to": "megumin",
+      "label": "Media service dependency"
+    }
+  ],
+  "layouts": [
+    {
+      "id": "physical-default",
+      "name": "Physical",
+      "view": "physical",
+      "items": [
+        { "nodeId": "adventurers-guild", "x": 0, "y": 0, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "darkness", "x": 3, "y": 0, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "reverse-proxy", "x": 6, "y": 0, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "axel", "x": 2, "y": 2, "z": 0, "w": 3, "h": 1 },
+        { "nodeId": "yunyun", "x": 0, "y": 4, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "megumin", "x": 3, "y": 4, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "aqua", "x": 6, "y": 4, "z": 0, "w": 2, "h": 1 }
+      ]
+    },
+    {
+      "id": "service-dependency-default",
+      "name": "Service Dependency",
+      "view": "service-dependency",
+      "items": [
+        { "nodeId": "reverse-proxy", "x": 0, "y": 0, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "yunyun", "x": 0, "y": 2, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "megumin", "x": 3, "y": 2, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "aqua", "x": 6, "y": 2, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "darkness", "x": 3, "y": 4, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "adventurers-guild", "x": 6, "y": 4, "z": 0, "w": 2, "h": 1 },
+        { "nodeId": "axel", "x": 6, "y": 6, "z": 0, "w": 2, "h": 1 }
+      ]
+    }
+  ]
+}
+
